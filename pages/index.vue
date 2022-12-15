@@ -5,7 +5,7 @@
     </div>
     <div class="right">
       <h1 class="title">ホーム</h1>
-      <Message v-for="post in posts" :key="post.id" :post="post" :uid="post.user.id"></Message>
+      <Message v-for="post in posts" :key="post.id" :post="post" :uid="uid"></Message>
     </div>
   </div>
 </template>
@@ -14,16 +14,16 @@
 import Message from "../components/Message.vue";
 import firebase from "~/plugins/firebase";
 export default {
+  components:{Message},
   data() {
     return {
       message: "未ログイン。",
-      //ユーザー情報
       uid: "",
-      //全ての投稿とそれに関連するユーザー、コメント、いいねを格納する配列
       posts: [],
     };
   },
   methods: {
+    //ログインの確認
     checkLogin(){
       firebase.auth().onAuthStateChanged((user) => {
         if (!user) {
@@ -41,40 +41,29 @@ export default {
         }
       });
     },
-    //すべての投稿とそれに関連するユーザー、コメント、いいねを取得する処理。API、非同期
+    //すべての投稿とそれに関連するユーザー、コメント、いいねを取得する
     async getPosts() {
       const resData = await this.$axios.get(
         "http://127.0.0.1:8000/api/v1/post"
       );
+      if(resData){
       this.posts = resData.data.data;
-    },
-    //投稿する
-    async insertPost(postData) {
-      const resData = await this.$axios.post(
-        "http://127.0.0.1:8000/api/v1/post",
-        postData
-      );
-    },
-    async getPost(post_id){
-      const resData=await this.$axios.get(
-        "http://127.0.0.1:8000/api/v1/post" + post_id
-      )
-      return resData;
-    },
-    async like(data){
-      if(data){
-        await this.$axios.post(
-        "http://127.0.0.1:8000/api/v1/like",data
-      );
       }
-      return getPost(data.post_id);
-
     },
-
-
+    //投稿削除
+    async deletePost(id){
+      await this.$axios.delete(
+        "http://127.0.0.1:8000/api/v1/post/" + id
+      ).then(()=>{
+        alert('投稿を削除しました');
+        this.$router.go({path:'/',force:true});
+      });
+    },
+    //投稿詳細画面へ遷移
     goPostDetail(post_id){
       this.$router.push({path:'/posts/' + post_id});
     },
+    //ログアウト処理
     signOut() {
       firebase
         .auth()
@@ -84,9 +73,6 @@ export default {
           this.$router.replace("/login");
         });
     },
-  },
-  beforeCreate() {
-
   },
   created() {
     this.getUserId();
@@ -119,7 +105,7 @@ export default {
 }
 .right {
   width: 100%;
-  height: 100vh;
+  overflow: auto;
 }
 .link {
   color: white;
