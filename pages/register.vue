@@ -150,6 +150,7 @@ input {
   margin: 15px auto;
   padding: 0 10px;
   font-size: 12px;
+  color:black;
 }
 .register__button {
   color: white;
